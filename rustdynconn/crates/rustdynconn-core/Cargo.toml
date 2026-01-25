@@ -1,0 +1,16 @@
+[package]
+name = "rustdynconn-core"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+hashbrown = "0.14"
+rand = { version = "0.8", optional = true }
+
+[features]
+debug_invariants = []
+
+[dev-dependencies]
+proptest = "1.4"
+rand = "0.8"

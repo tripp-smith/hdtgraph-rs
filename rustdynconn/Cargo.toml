@@ -1,0 +1,6 @@
+[workspace]
+members = [
+  "crates/rustdynconn-core",
+  "crates/rustdynconn-py",
+]
+resolver = "2"
