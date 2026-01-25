@@ -56,16 +56,22 @@ proptest! {
             match op {
                 0 => {
                     if u != v {
-                        graph.add_edge(u, v);
-                        let (a, b) = if u <= v { (u, v) } else { (v, u) };
-                        adj.entry(a).or_default().insert(b);
-                        adj.entry(b).or_default().insert(a);
+                        if graph.add_edge(u, v) {
+                            let (a, b) = if u <= v { (u, v) } else { (v, u) };
+                            adj.entry(a).or_default().insert(b);
+                            adj.entry(b).or_default().insert(a);
+                        }
                     }
                 }
                 1 => {
-                    graph.remove_edge(u, v);
-                    adj.entry(u).or_default().remove(&v);
-                    adj.entry(v).or_default().remove(&u);
+                    if graph.remove_edge(u, v) {
+                        if let Some(neighbors) = adj.get_mut(&u) {
+                            neighbors.remove(&v);
+                        }
+                        if let Some(neighbors) = adj.get_mut(&v) {
+                            neighbors.remove(&u);
+                        }
+                    }
                 }
                 _ => {
                     let expected = bfs_connected(&adj, u, v);
