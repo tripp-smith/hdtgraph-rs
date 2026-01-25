@@ -60,7 +60,7 @@ jobs:
           "$VENV_PY" -m pip install maturin
           "$VENV_PY" -m pip install -r tests/python/requirements.txt
 
-      - name: Build & install extension (maturin develop)
+      - name: Build & install extension (maturin build)
         working-directory: rustdynconn
         shell: bash
         run: |
