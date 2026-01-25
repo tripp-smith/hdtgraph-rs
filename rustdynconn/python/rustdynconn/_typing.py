@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Iterable, Optional, Tuple
 
 try:
-    from rustdynconn import DynamicGraphPy as _DynamicGraphImpl
+    from ._rustdynconn import DynamicGraphPy as _DynamicGraphImpl
 except Exception:  # pragma: no cover - fallback for type checking only
     _DynamicGraphImpl = None
 
