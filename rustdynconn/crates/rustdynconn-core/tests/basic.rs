@@ -44,7 +44,7 @@ fn components_basic() {
     graph.add_edge(2, 3);
     graph.add_edge(3, 4);
     let comps = graph.components();
-    assert_eq!(comps.len(), 3);
+    assert_eq!(comps.len(), 2);
 }
 
 proptest! {

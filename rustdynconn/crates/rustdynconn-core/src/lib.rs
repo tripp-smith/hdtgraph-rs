@@ -6,7 +6,7 @@ use util::edge::{canonical_edge, EdgeKey, EdgeRec};
 
 #[derive(Debug, Default)]
 pub struct DynamicGraph {
-    adj: Vec<HashSet<u32>>,
+    adj: HashMap<u32, HashSet<u32>>,
     edges: HashMap<EdgeKey, EdgeRec>,
 }
 
@@ -24,10 +24,7 @@ impl DynamicGraph {
     }
 
     pub fn add_node(&mut self, node: u32) {
-        let len = self.adj.len();
-        if (node as usize) >= len {
-            self.adj.resize_with((node as usize) + 1, HashSet::new);
-        }
+        self.adj.entry(node).or_default();
     }
 
     pub fn has_edge(&self, u: u32, v: u32) -> bool {
@@ -46,8 +43,8 @@ impl DynamicGraph {
             return false;
         }
         self.edges.insert(key, EdgeRec { u: key.0, v: key.1 });
-        self.adj[u as usize].insert(v);
-        self.adj[v as usize].insert(u);
+        self.adj.get_mut(&u).expect("node exists").insert(v);
+        self.adj.get_mut(&v).expect("node exists").insert(u);
         true
     }
 
@@ -56,35 +53,31 @@ impl DynamicGraph {
         if self.edges.remove(&key).is_none() {
             return false;
         }
-        if let Some(set) = self.adj.get_mut(u as usize) {
-            set.remove(&v);
-        }
-        if let Some(set) = self.adj.get_mut(v as usize) {
-            set.remove(&u);
-        }
+        self.adj.entry(u).or_default().remove(&v);
+        self.adj.entry(v).or_default().remove(&u);
         true
     }
 
     pub fn connected(&self, u: u32, v: u32) -> bool {
         if u == v {
-            return self.adj.get(u as usize).is_some();
+            return self.adj.contains_key(&u);
         }
-        if (u as usize) >= self.adj.len() || (v as usize) >= self.adj.len() {
+        if !self.adj.contains_key(&u) || !self.adj.contains_key(&v) {
             return false;
         }
-        let mut visited = vec![false; self.adj.len()];
+        let mut visited = HashSet::new();
         let mut queue = VecDeque::new();
-        visited[u as usize] = true;
+        visited.insert(u);
         queue.push_back(u);
         while let Some(cur) = queue.pop_front() {
-            for &nbr in &self.adj[cur as usize] {
-                if nbr == v {
-                    return true;
-                }
-                let idx = nbr as usize;
-                if !visited[idx] {
-                    visited[idx] = true;
-                    queue.push_back(nbr);
+            if let Some(neighbors) = self.adj.get(&cur) {
+                for &nbr in neighbors {
+                    if nbr == v {
+                        return true;
+                    }
+                    if visited.insert(nbr) {
+                        queue.push_back(nbr);
+                    }
                 }
             }
         }
@@ -92,21 +85,21 @@ impl DynamicGraph {
     }
 
     pub fn component(&self, u: u32) -> Vec<u32> {
-        if (u as usize) >= self.adj.len() {
+        if !self.adj.contains_key(&u) {
             return Vec::new();
         }
-        let mut visited = vec![false; self.adj.len()];
+        let mut visited = HashSet::new();
         let mut queue = VecDeque::new();
         let mut out = Vec::new();
-        visited[u as usize] = true;
+        visited.insert(u);
         queue.push_back(u);
         while let Some(cur) = queue.pop_front() {
             out.push(cur);
-            for &nbr in &self.adj[cur as usize] {
-                let idx = nbr as usize;
-                if !visited[idx] {
-                    visited[idx] = true;
-                    queue.push_back(nbr);
+            if let Some(neighbors) = self.adj.get(&cur) {
+                for &nbr in neighbors {
+                    if visited.insert(nbr) {
+                        queue.push_back(nbr);
+                    }
                 }
             }
         }
@@ -114,23 +107,23 @@ impl DynamicGraph {
     }
 
     pub fn components(&self) -> Vec<Vec<u32>> {
-        let mut visited = vec![false; self.adj.len()];
+        let mut visited = HashSet::new();
         let mut comps = Vec::new();
-        for node in 0..self.adj.len() {
-            if visited[node] {
+        for &node in self.adj.keys() {
+            if visited.contains(&node) {
                 continue;
             }
             let mut queue = VecDeque::new();
             let mut comp = Vec::new();
-            visited[node] = true;
-            queue.push_back(node as u32);
+            visited.insert(node);
+            queue.push_back(node);
             while let Some(cur) = queue.pop_front() {
                 comp.push(cur);
-                for &nbr in &self.adj[cur as usize] {
-                    let idx = nbr as usize;
-                    if !visited[idx] {
-                        visited[idx] = true;
-                        queue.push_back(nbr);
+                if let Some(neighbors) = self.adj.get(&cur) {
+                    for &nbr in neighbors {
+                        if visited.insert(nbr) {
+                            queue.push_back(nbr);
+                        }
                     }
                 }
             }
@@ -144,7 +137,7 @@ impl DynamicGraph {
     }
 
     pub fn nodes(&self) -> impl Iterator<Item = u32> + '_ {
-        (0..self.adj.len()).map(|n| n as u32)
+        self.adj.keys().copied()
     }
 
     pub fn levels(&self) -> usize {
