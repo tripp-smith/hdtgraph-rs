@@ -62,9 +62,14 @@ proptest! {
                     }
                 }
                 1 => {
-                    graph.remove_edge(u, v);
-                    adj.entry(u).or_default().remove(&v);
-                    adj.entry(v).or_default().remove(&u);
+                    if graph.remove_edge(u, v) {
+                        if let Some(neighbors) = adj.get_mut(&u) {
+                            neighbors.remove(&v);
+                        }
+                        if let Some(neighbors) = adj.get_mut(&v) {
+                            neighbors.remove(&u);
+                        }
+                    }
                 }
                 _ => {
                     let expected = bfs_connected(&adj, u, v);
