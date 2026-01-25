@@ -9,6 +9,7 @@ pub struct DynamicGraphPy {
     mapping: NodeMapping,
 }
 
+#[allow(non_local_definitions)]
 #[pymethods]
 impl DynamicGraphPy {
     #[new]
@@ -97,8 +98,8 @@ impl DynamicGraphPy {
                 if tuple.len() != 2 {
                     continue;
                 }
-                let u = tuple.get_item(0);
-                let v = tuple.get_item(1);
+                let u = tuple.get_item(0)?;
+                let v = tuple.get_item(1)?;
                 let _ = self.add_edge(py, u, v)?;
             }
         }
@@ -108,8 +109,8 @@ impl DynamicGraphPy {
                 if tuple.len() != 2 {
                     continue;
                 }
-                let u = tuple.get_item(0);
-                let v = tuple.get_item(1);
+                let u = tuple.get_item(0)?;
+                let v = tuple.get_item(1)?;
                 let _ = self.remove_edge(py, u, v)?;
             }
         }
@@ -119,12 +120,12 @@ impl DynamicGraphPy {
     pub fn to_networkx(&self, py: Python<'_>) -> PyResult<PyObject> {
         let nx = py.import("networkx")?;
         let graph = nx.getattr("Graph")?.call0()?;
-        for node in self.nodes(py)?.downcast::<PyList>()? {
+        for node in self.nodes(py)?.downcast::<PyList>(py)? {
             graph.call_method1("add_node", (node,))?;
         }
-        for edge in self.edges(py)?.downcast::<PyList>()? {
+        for edge in self.edges(py)?.downcast::<PyList>(py)? {
             let tuple = edge.downcast::<PyTuple>()?;
-            graph.call_method1("add_edge", (tuple.get_item(0), tuple.get_item(1)))?;
+            graph.call_method1("add_edge", (tuple.get_item(0)?, tuple.get_item(1)?))?;
         }
         Ok(graph.into_py(py))
     }

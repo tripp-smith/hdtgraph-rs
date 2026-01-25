@@ -5,7 +5,7 @@ use std::collections::HashMap;
 #[derive(Default)]
 pub struct NodeMapping {
     next_id: u32,
-    buckets: HashMap<i64, Vec<(Py<PyAny>, u32)>>,
+    buckets: HashMap<isize, Vec<(Py<PyAny>, u32)>>,
     id_to_obj: Vec<Py<PyAny>>,
 }
 
@@ -62,6 +62,7 @@ impl NodeMapping {
         Ok(Some(self.id_to_obj[idx].clone_ref(py).into_py(py)))
     }
 
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.id_to_obj.len()
     }
