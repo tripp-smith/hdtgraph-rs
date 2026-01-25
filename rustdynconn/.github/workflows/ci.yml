@@ -1,0 +1,51 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --all -- --check
+        working-directory: rustdynconn
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+        working-directory: rustdynconn
+
+  test-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test -p rustdynconn-core --features debug_invariants
+        working-directory: rustdynconn
+
+  test-python:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install maturin
+      - run: maturin develop -m crates/rustdynconn-py/pyproject.toml
+        working-directory: rustdynconn
+      - run: pip install -r tests/python/requirements.txt
+        working-directory: rustdynconn
+      - run: pytest -q tests/python -m "not slow"
+        working-directory: rustdynconn
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pytest-benchmark-${{ matrix.os }}-${{ matrix.python-version }}
+          path: rustdynconn/.benchmarks

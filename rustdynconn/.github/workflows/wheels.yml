@@ -1,0 +1,38 @@
+name: Wheels
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build-wheels:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          command: build
+          args: --release --out dist --sdist -m crates/rustdynconn-py/pyproject.toml
+          working-directory: rustdynconn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}
+          path: rustdynconn/dist/*
+
+  smoke-test-wheels:
+    runs-on: ubuntu-latest
+    needs: build-wheels
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install rustdynconn --no-index --find-links dist
+      - run: python -c "import rustdynconn; g = rustdynconn.DynamicGraph(); g.add_edge(1,2); assert g.connected(1,2)"
