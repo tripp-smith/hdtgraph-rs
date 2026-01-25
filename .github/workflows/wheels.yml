@@ -18,11 +18,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            args: ""
+            extra-args: ""
           - os: macos-latest
-            args: "--universal2"
+            extra-args: "-- --universal2"
           - os: windows-latest
-            args: ""
+            extra-args: ""
 
     steps:
       - uses: actions/checkout@v4
@@ -35,7 +35,7 @@ jobs:
             --release
             --out dist
             -m rustdynconn/crates/rustdynconn-py/Cargo.toml
-            ${{ matrix.args }}
+            ${{ matrix.extra-args }}
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
