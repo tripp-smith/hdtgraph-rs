@@ -48,9 +48,11 @@ jobs:
           python -m pip install maturin
           python -m pip install -r tests/python/requirements.txt
 
-      - name: Build & install extension (maturin develop)
+      - name: Build & install extension (maturin build)
         working-directory: rustdynconn
-        run: maturin develop -m crates/rustdynconn-py/Cargo.toml
+        run: |
+          maturin build -m crates/rustdynconn-py/pyproject.toml
+          python -m pip install --no-index --find-links target/wheels rustdynconn
 
       - name: Py tests
         working-directory: rustdynconn

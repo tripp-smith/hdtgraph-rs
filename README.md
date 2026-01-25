@@ -534,6 +534,11 @@ Use `maturin` + PyO3 for the Python extension.
 
 If you need full CPython-per-version wheels (fine for v1), build for 3.9–3.13.
 
+Local development notes:
+
+* `maturin develop` requires an active virtualenv/conda env (or a `.venv` in this repo).
+* If you do not want a virtualenv, use `maturin build -m crates/rustdynconn-py/pyproject.toml` and `pip install <path/to/wheel>`.
+
 ## GitHub Actions specification
 
 ### Workflow 1: CI (PR + push)
@@ -678,4 +683,3 @@ Ship examples that prove the point:
 [2]: https://dl.acm.org/doi/pdf/10.1145/502090.502095?utm_source=chatgpt.com "Poly-logarithmic deterministic fully-dynamic algorithms for ..."
 [3]: https://www.cs.cmu.edu/afs/cs.cmu.edu/academic/class/15850-f20/www/notes/lec3.pdf?utm_source=chatgpt.com "3 Dynamic Algorithms for Graph Connectivity"
 [4]: https://courses.csail.mit.edu/6.851/spring12/scribe/L20.pdf?utm_source=chatgpt.com "1 Overview 2 Dynamic Connectivity"
-
