@@ -20,7 +20,7 @@ jobs:
           - os: ubuntu-latest
             args: ""
           - os: macos-latest
-            args: "--universal2"
+            args: "--target universal2-apple-darwin"
           - os: windows-latest
             args: ""
 
@@ -50,8 +50,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Preflight cargo package file list
+        run: |
+          FILES="$(cargo package --list --allow-dirty --manifest-path rustdynconn/crates/rustdynconn-py/Cargo.toml)"
+          printf '%s\n' "$FILES" | sed -n '1,200p'
+          if printf '%s\n' "$FILES" | rg "\\.\\./"; then
+            echo "Found paths outside crate directory in cargo package list."
+            exit 1
+          fi
+
       - uses: PyO3/maturin-action@v1
+        env:
+          RUST_BACKTRACE: "1"
         with:
+          maturin-version: latest
           command: sdist
           args: -o dist -m rustdynconn/crates/rustdynconn-py/Cargo.toml
 
