@@ -1,0 +1,94 @@
+name: wheels
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build-wheels:
+    name: build wheels (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            args: ""
+          - os: macos-latest
+            args: "--universal2"
+          - os: windows-latest
+            args: ""
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          command: build
+          args: >
+            --release
+            --out dist
+            -m rustdynconn/crates/rustdynconn-py/Cargo.toml
+            ${{ matrix.args }}
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}
+          path: dist/*.whl
+
+  build-sdist:
+    name: build sdist
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: -o dist -m rustdynconn/crates/rustdynconn-py/Cargo.toml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  smoke-test:
+    name: smoke test wheels
+    runs-on: ubuntu-latest
+    needs: [build-wheels, build-sdist]
+
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Flatten dist
+        run: |
+          mkdir -p dist/flat
+          find dist -name "*.whl" -exec cp {} dist/flat/ \;
+          find dist -name "*.tar.gz" -exec cp {} dist/flat/ \;
+          ls -la dist/flat
+
+      - name: Install wheel and smoke test
+        run: |
+          python -m pip install -U pip
+          python -m pip install --no-index --find-links dist/flat rustdynconn
+          python - <<'PY'
+          from rustdynconn import DynamicGraph
+
+          g = DynamicGraph()
+          g.add_edge(1, 2)
+          assert g.connected(1, 2)
+          PY

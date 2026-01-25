@@ -5,7 +5,7 @@ use std::collections::HashMap;
 #[derive(Default)]
 pub struct NodeMapping {
     next_id: u32,
-    buckets: HashMap<i64, Vec<(Py<PyAny>, u32)>>,
+    buckets: HashMap<isize, Vec<(Py<PyAny>, u32)>>,
     id_to_obj: Vec<Py<PyAny>>,
 }
 
@@ -14,7 +14,11 @@ impl NodeMapping {
         let hash = obj.hash()?;
         if let Some(entries) = self.buckets.get(&hash) {
             for (stored, node_id) in entries {
-                if stored.as_ref(py).rich_compare(obj, pyo3::basic::CompareOp::Eq)?.is_true()? {
+                if stored
+                    .as_ref(py)
+                    .rich_compare(obj, pyo3::basic::CompareOp::Eq)?
+                    .is_true()?
+                {
                     return Ok(*node_id);
                 }
             }
@@ -38,7 +42,11 @@ impl NodeMapping {
         let hash = obj.hash()?;
         if let Some(entries) = self.buckets.get(&hash) {
             for (stored, node_id) in entries {
-                if stored.as_ref(py).rich_compare(obj, pyo3::basic::CompareOp::Eq)?.is_true()? {
+                if stored
+                    .as_ref(py)
+                    .rich_compare(obj, pyo3::basic::CompareOp::Eq)?
+                    .is_true()?
+                {
                     return Ok(Some(*node_id));
                 }
             }
@@ -54,6 +62,7 @@ impl NodeMapping {
         Ok(Some(self.id_to_obj[idx].clone_ref(py).into_py(py)))
     }
 
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.id_to_obj.len()
     }
