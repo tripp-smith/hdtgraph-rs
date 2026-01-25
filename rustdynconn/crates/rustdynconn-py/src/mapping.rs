@@ -14,7 +14,11 @@ impl NodeMapping {
         let hash = obj.hash()?;
         if let Some(entries) = self.buckets.get(&hash) {
             for (stored, node_id) in entries {
-                if stored.as_ref(py).rich_compare(obj, pyo3::basic::CompareOp::Eq)?.is_true()? {
+                if stored
+                    .as_ref(py)
+                    .rich_compare(obj, pyo3::basic::CompareOp::Eq)?
+                    .is_true()?
+                {
                     return Ok(*node_id);
                 }
             }
@@ -38,7 +42,11 @@ impl NodeMapping {
         let hash = obj.hash()?;
         if let Some(entries) = self.buckets.get(&hash) {
             for (stored, node_id) in entries {
-                if stored.as_ref(py).rich_compare(obj, pyo3::basic::CompareOp::Eq)?.is_true()? {
+                if stored
+                    .as_ref(py)
+                    .rich_compare(obj, pyo3::basic::CompareOp::Eq)?
+                    .is_true()?
+                {
                     return Ok(Some(*node_id));
                 }
             }

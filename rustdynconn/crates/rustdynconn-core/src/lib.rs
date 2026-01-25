@@ -45,13 +45,7 @@ impl DynamicGraph {
         if self.edges.contains_key(&key) {
             return false;
         }
-        self.edges.insert(
-            key,
-            EdgeRec {
-                u: key.0,
-                v: key.1,
-            },
-        );
+        self.edges.insert(key, EdgeRec { u: key.0, v: key.1 });
         self.adj[u as usize].insert(v);
         self.adj[v as usize].insert(u);
         true
