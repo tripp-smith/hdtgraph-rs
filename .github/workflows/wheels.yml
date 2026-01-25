@@ -20,7 +20,7 @@ jobs:
           - os: ubuntu-latest
             extra-args: ""
           - os: macos-latest
-            extra-args: "-- --universal2"
+            extra-args: "--target universal2-apple-darwin"
           - os: windows-latest
             extra-args: ""
 
