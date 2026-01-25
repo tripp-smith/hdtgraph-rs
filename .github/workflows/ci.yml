@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   test:
@@ -81,3 +82,20 @@ jobs:
             VENV_PY=".venv/bin/python"
           fi
           "$VENV_PY" -m pytest -q tests/python -m "not slow"
+
+  trigger-wheels:
+    name: Trigger wheels workflow
+    needs: test
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch wheels workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'wheels.yml',
+              ref: context.ref,
+            });
