@@ -1,9 +1,15 @@
 import random
-import networkx as nx
+
+import pytest
+from _pytest.fixtures import FixtureLookupError
+
+pytestmark = [pytest.mark.networkx, pytest.mark.benchmark]
+
 from rustdynconn import DynamicGraph
 
 
-def test_connected_benchmark(benchmark):
+def test_connected_benchmark(request):
+    nx = pytest.importorskip("networkx")
     rng = random.Random(0)
     g = DynamicGraph()
     nxg = nx.Graph()
@@ -17,4 +23,9 @@ def test_connected_benchmark(benchmark):
         for u, v in pairs:
             g.connected(u, v)
 
-    benchmark(run)
+    try:
+        benchmark = request.getfixturevalue("benchmark")
+    except FixtureLookupError:
+        run()
+    else:
+        benchmark(run)
