@@ -1,6 +1,9 @@
+import pytest
 from collections import deque
 
 from rustdynconn import DynamicGraph
+
+pytestmark = pytest.mark.core
 
 
 def _has_path(edges: set[tuple[object, object]], start: object, target: object) -> bool:
