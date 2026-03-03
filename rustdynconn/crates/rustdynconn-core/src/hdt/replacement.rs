@@ -33,12 +33,10 @@ pub fn find_replacement(
                 let e = canonical_edge(x, y);
                 if let Some(rec) = edges.get_mut(&e) {
                     if levels[level].ett.connected(x, y) {
-                        let next = (rec.level + 1).min(levels.len().saturating_sub(1));
-                        if next != rec.level {
-                            levels[rec.level].remove_non_tree_edge(rec.u, rec.v);
-                            levels[next].add_non_tree_edge(rec.u, rec.v);
-                            rec.level = next;
-                        }
+                        // Keep the edge at its current level for correctness in this
+                        // connectivity-only stage. Eager promotion can hide future
+                        // replacement candidates from level-0 cuts before full HDT
+                        // invariants are implemented.
                         continue;
                     }
                     for l in 0..=level {
