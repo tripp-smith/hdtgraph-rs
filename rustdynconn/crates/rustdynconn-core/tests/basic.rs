@@ -47,6 +47,87 @@ fn components_basic() {
     assert_eq!(comps.len(), 2);
 }
 
+#[test]
+fn regression_prop_sequence_min_case() {
+    let mut graph = DynamicGraph::new();
+    let ops = [
+        (0u8, 7u32, 2u32),
+        (0, 0, 12),
+        (0, 18, 1),
+        (0, 1, 6),
+        (0, 6, 17),
+        (0, 5, 9),
+        (0, 8, 7),
+        (0, 0, 18),
+        (0, 7, 5),
+        (0, 12, 2),
+        (0, 0, 17),
+        (0, 0, 16),
+        (0, 2, 2),
+        (0, 17, 7),
+        (1, 0, 12),
+        (1, 6, 1),
+        (2, 0, 5),
+    ];
+
+    let mut adj: HashMap<u32, HashSet<u32>> = HashMap::new();
+    for (op, u, v) in ops {
+        match op {
+            0 => {
+                if u != v && graph.add_edge(u, v) {
+                    let (a, b) = if u <= v { (u, v) } else { (v, u) };
+                    adj.entry(a).or_default().insert(b);
+                    adj.entry(b).or_default().insert(a);
+                }
+            }
+            1 => {
+                if graph.remove_edge(u, v) {
+                    if let Some(neighbors) = adj.get_mut(&u) {
+                        neighbors.remove(&v);
+                    }
+                    if let Some(neighbors) = adj.get_mut(&v) {
+                        neighbors.remove(&u);
+                    }
+                }
+            }
+            _ => {
+                assert_eq!(bfs_connected(&adj, u, v), graph.connected(u, v));
+            }
+        }
+    }
+}
+
+#[test]
+fn nodes_and_counts_include_tree_only_vertices() {
+    let mut graph = DynamicGraph::new();
+    graph.add_node(10);
+    graph.add_node(11);
+    graph.add_edge(10, 11);
+
+    let nodes: HashSet<_> = graph.nodes().collect();
+    assert_eq!(nodes, HashSet::from([10, 11]));
+    assert_eq!(graph.node_count(), 2);
+}
+
+#[test]
+fn components_include_singleton_and_tree_components() {
+    let mut graph = DynamicGraph::new();
+    graph.add_node(100);
+    graph.add_edge(1, 2);
+    graph.add_edge(2, 3);
+
+    let mut comps: Vec<Vec<u32>> = graph
+        .components()
+        .into_iter()
+        .map(|mut c| {
+            c.sort_unstable();
+            c
+        })
+        .collect();
+    comps.sort();
+    assert_eq!(comps, vec![vec![1, 2, 3], vec![100]]);
+}
+
 proptest! {
     #[test]
     fn prop_sequence(ops in prop::collection::vec((0u8..3, 0u32..20, 0u32..20), 1..200)) {
