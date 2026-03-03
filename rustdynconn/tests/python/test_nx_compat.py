@@ -1,4 +1,8 @@
+import pytest
+
 from rustdynconn import DynamicGraphAdapter
+
+pytestmark = pytest.mark.core
 
 
 def test_adapter_basic():
