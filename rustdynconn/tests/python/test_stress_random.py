@@ -1,6 +1,10 @@
 import random
 
+import pytest
+
 from rustdynconn import DynamicGraph
+
+pytestmark = pytest.mark.core
 
 
 def test_random_ops():
